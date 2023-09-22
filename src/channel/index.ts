@@ -83,13 +83,13 @@ export class Channel<
   StateType extends ChannelState = {},
 > {
   async subscribed(
-    handle: ChannelHandle<IdentifiersType, StateType, TransmissionsType>,
-    params: ParamsType | null,
+    _handle: ChannelHandle<IdentifiersType, StateType, TransmissionsType>,
+    _params: ParamsType | null,
   ): Promise<void> {}
 
   async unsubscribed(
-    handle: ChannelHandle<IdentifiersType, StateType, TransmissionsType>,
-    params: ParamsType | null,
+    _handle: ChannelHandle<IdentifiersType, StateType, TransmissionsType>,
+    _params: ParamsType | null,
   ): Promise<void> {
     return;
   }

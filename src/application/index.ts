@@ -126,7 +126,7 @@ export class Application<IdentifiersType extends IdentifiersMap = {}> {
     }
   }
 
-  async connect(handle: ConnectionHandle<IdentifiersType>) {
+  async connect(_handle: ConnectionHandle<IdentifiersType>) {
     // Override this method in your application class to perform authentication
     // and set up connection identifiers
   }
@@ -177,7 +177,7 @@ export class Application<IdentifiersType extends IdentifiersMap = {}> {
     await this.disconnect(handle);
   }
 
-  async disconnect(handle: ConnectionHandle<IdentifiersType>) {
+  async disconnect(_handle: ConnectionHandle<IdentifiersType>) {
     // Override this method in your application class to perform cleanup on disconnect
   }
 
