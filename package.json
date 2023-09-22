@@ -1,0 +1,31 @@
+{
+  "name": "@anycable/serverless-js",
+  "version": "0.0.1",
+  "description": "AnyCable channels for serverless JS apps",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "anycable",
+    "actioncable",
+    "serverless"
+  ],
+  "homepage": "https://anycable.io/",
+  "repository": "https://github.com/anycable/anycable-serverless-js",
+  "author": "Vladimir Dementyev",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "jose": "^4.14.6"
+  },
+  "devDependencies": {
+  }
+}
