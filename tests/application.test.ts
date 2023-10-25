@@ -1,3 +1,4 @@
+import { errors } from 'jose'
 import {
   Application,
   ConnectionHandle,
@@ -57,6 +58,30 @@ ApplicationTest('handleOpen when unauthorized', async () => {
   assert.equal(handle.transmissions, [
     JSON.stringify({ type: 'disconnect', reason: 'unauthorized' })
   ])
+})
+
+ApplicationTest('handleOpen when token expired', async () => {
+  const app = new TestApplication()
+
+  const handle = new ConnectionHandle<TestIdentifiers>('123', {
+    url: 'http://localhost?user_id=1&token=expired'
+  })
+
+  app.connect = async (handle: ConnectionHandle<TestIdentifiers>) => {
+    throw new errors.JWTExpired('expired')
+  }
+
+  await app.handleOpen(handle)
+
+  assert.is(handle.rejected, true)
+  assert.is(handle.transmissions.length, 1)
+
+  const transmission = JSON.parse(handle.transmissions[0])
+  assert.equal(transmission, {
+    type: 'disconnect',
+    reason: 'token_expired',
+    reconnect: false
+  })
 })
 
 ApplicationTest('handleClose', async () => {

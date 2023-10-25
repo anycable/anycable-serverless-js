@@ -117,12 +117,24 @@ export class Application<IdentifiersType extends IdentifiersMap = {}> {
   }
 
   async handleOpen(handle: ConnectionHandle<IdentifiersType>) {
-    await this.connect(handle)
+    try {
+      await this.connect(handle)
 
-    if (handle.rejected) {
-      handle.transmit({ type: 'disconnect', reason: 'unauthorized' })
-    } else {
-      handle.transmit({ type: 'welcome', sid: handle.id })
+      if (handle.rejected) {
+        handle.transmit({ type: 'disconnect', reason: 'unauthorized' })
+      } else {
+        handle.transmit({ type: 'welcome', sid: handle.id })
+      }
+    } catch (e) {
+      if ((e as any)?.code == 'ERR_JWT_EXPIRED') {
+        handle.reject().transmit({
+          type: 'disconnect',
+          reason: 'token_expired',
+          reconnect: false
+        })
+      } else {
+        throw e
+      }
     }
   }
 
