@@ -10,7 +10,12 @@ export type {
   DisconnectResponse
 } from './rpc'
 
-export { connectHandler, commandHandler, disconnectHandler } from './service'
+export {
+  handler,
+  connectHandler,
+  commandHandler,
+  disconnectHandler
+} from './service'
 export { Application, ConnectionHandle } from './application'
 export type { IdentifiersMap } from './application'
 export { Channel, ChannelHandle } from './channel'

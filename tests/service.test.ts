@@ -5,14 +5,16 @@ import {
   Channel,
   ConnectionHandle,
   ChannelHandle,
-  connectHandler,
-  commandHandler,
-  disconnectHandler,
-  Status
+  handler,
+  Status,
+  ConnectionResponse,
+  CommandResponse,
+  DisconnectResponse
 } from '../src/index'
 
 const HandlersTest = suite('Handlers')
 function createMockRequest(
+  method: string,
   url: string,
   options?: Partial<{ body: any; sid: string }>
 ): Request {
@@ -29,7 +31,7 @@ function createMockRequest(
     headers.set('x-anycable-meta-sid', sid)
   }
 
-  return new Request('http://cable.test/api', {
+  return new Request(`http://cable.test/api/${method}`, {
     method: 'POST',
     body: bodyBuffer,
     headers: headers as any
@@ -77,10 +79,10 @@ class TestChannel extends Channel<TestIdentifiers, { roomId: string }> {
 
 HandlersTest('connect + welcomed', async () => {
   const app = new TestApplication()
-  const request = createMockRequest('http://localhost?user_id=13', {
+  const request = createMockRequest('connect', 'http://localhost?user_id=13', {
     sid: 's42'
   })
-  const response = await connectHandler(request, app)
+  const response = (await handler(request, app)) as ConnectionResponse
 
   assert.is(response.status, Status.SUCCESS)
   assert.is(response.error_msg, '')
@@ -92,10 +94,10 @@ HandlersTest('connect + welcomed', async () => {
 
 HandlersTest('connect + rejected', async () => {
   const app = new TestApplication()
-  const request = createMockRequest('http://localhost', {
+  const request = createMockRequest('connect', 'http://localhost', {
     sid: 's42'
   })
-  const response = await connectHandler(request, app)
+  const response = (await handler(request, app)) as ConnectionResponse
 
   assert.is(response.status, Status.FAILURE)
   assert.is(response.error_msg, 'Auth failed')
@@ -111,7 +113,7 @@ HandlersTest('command + subscribed + confirmed', async () => {
 
   const identifier = `{"channel":"TestChannel","roomId":"42"}`
 
-  const request = createMockRequest('http://localhost', {
+  const request = createMockRequest('command', 'http://localhost', {
     body: {
       connection_identifiers: '{"userId":"13"}',
       command: 'subscribe',
@@ -119,7 +121,7 @@ HandlersTest('command + subscribed + confirmed', async () => {
     }
   })
 
-  const response = await commandHandler(request, app)
+  const response = (await handler(request, app)) as CommandResponse
 
   assert.is(response.status, Status.SUCCESS)
   assert.is(response.disconnect, false)
@@ -157,14 +159,14 @@ HandlersTest('disconnect', async () => {
 
   const identifier = `{"channel":"TestChannel","roomId":"42"}`
 
-  const request = createMockRequest('http://localhost', {
+  const request = createMockRequest('disconnect', 'http://localhost', {
     body: {
       identifiers: '{"userId":"13"}',
       subscriptions: [identifier]
     }
   })
 
-  const response = await disconnectHandler(request, app)
+  const response = (await handler(request, app)) as DisconnectResponse
 
   assert.is(response.status, Status.SUCCESS)
   assert.is(disconnectedId, '13')

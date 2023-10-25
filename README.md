@@ -161,7 +161,11 @@ Currently, this package only supports broadcasting over HTTP. However, AnyCable 
 
 ### HTTP handlers
 
-To glue our HTTP layer with the channels, we need to configure HTTP handlers. Below you can find an example of [Vercel](https://vercel.com) serverless functions:
+To glue our HTTP layer with the channels, we need to configure HTTP handlers. Below you can find an examples for popular serverless platforms.
+
+#### Vercel
+
+Define [Vercel](https://vercel.com) serverless functions as follows:
 
 ```js
 // api/anycable/connect/route.ts
@@ -212,6 +216,49 @@ import app from "../../cable";
 export async function POST(request: Request) {
   try {
     const response = await disconnectHandler(request, app);
+    return NextResponse.json(response, {
+      status: 200,
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({
+      status: Status.ERROR,
+      error_msg: "Server error",
+    });
+  }
+}
+```
+
+You can also avoid repeatition by using a universal handler and a bit of configuration:
+
+```js
+// next.config.js
+const nextConfig = {
+  // ...
+  rewrites: async () => {
+    return [
+      {
+        source: "/api/anycable/:path*",
+        destination: "/api/anycable",
+      },
+    ];
+  },
+};
+
+// ...
+```
+
+And then you can use the following handler:
+
+```js
+// api/anycable/route.ts
+import { NextResponse } from "next/server";
+import { handler, Status } from "@/lib/anycable";
+import app from "../../cable";
+
+export async function POST(request: Request) {
+  try {
+    const response = await handler(request, app);
     return NextResponse.json(response, {
       status: 200,
     });

@@ -33,6 +33,27 @@ function extractSessionId(req: Request) {
   return req.headers.get('x-anycable-meta-sid')
 }
 
+// Universal handler for all AnyCable RPC methods,
+// which infers the method from the request path
+export const handler = async (
+  request: Request,
+  app: Application
+): Promise<ConnectionResponse | CommandResponse | DisconnectResponse> => {
+  const path = new URL(request.url).pathname
+  const method = path.split('/').pop()
+
+  switch (method) {
+    case 'connect':
+      return connectHandler(request, app)
+    case 'disconnect':
+      return disconnectHandler(request, app)
+    case 'command':
+      return commandHandler(request, app)
+    default:
+      throw new Error(`Unknown RPC method: ${method}`)
+  }
+}
+
 export const connectHandler = async (
   request: Request,
   app: Application
