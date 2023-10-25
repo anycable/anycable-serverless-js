@@ -1,0 +1,12 @@
+yarn-error.log
+yarn.lock
+pnpm-lock.yaml
+
+node_modules/
+tests/
+coverage/
+tsconfig.json
+**/*.test.ts
+**/types.ts
+**/errors.ts
+.github/
