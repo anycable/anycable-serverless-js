@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/%40anycable%2serverless-js.svg)](https://badge.fury.io/js/%40anycable%2serverless-js)
+[![npm version](https://badge.fury.io/js/@anycable%2Fserverless-js.svg)](https://badge.fury.io/js/@anycable%2Fserverless-js)
 
 # AnyCable Serverless
 
