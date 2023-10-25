@@ -3,7 +3,15 @@
   "version": "0.0.1",
   "description": "AnyCable channels for serverless JS apps",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "pnpm": ">=8.7.5"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm build",
+    "test": "uvu -r @esbuild-kit/cjs-loader src/test",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
   },
   "keywords": [
     "anycable",
@@ -11,21 +19,38 @@
     "serverless"
   ],
   "homepage": "https://anycable.io/",
-  "repository": "https://github.com/anycable/anycable-serverless-js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anycable/anycable-serverless-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anycable/anycable-serverless-js/issues"
+  },
   "author": "Vladimir Dementyev",
   "license": "MIT",
   "sideEffects": false,
-  "main": "index.ts",
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
-    ".": "./index.ts",
-    "./package.json": "./package.json"
+    ".": "./dist/index.js"
   },
   "dependencies": {
-  },
-  "peerDependencies": {
     "jose": "^4.14.6"
   },
   "devDependencies": {
+    "@esbuild-kit/cjs-loader": "^2.4.4",
+    "@types/node": "^20.6.3",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.49.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
+    "uvu": "^0.5.6"
   }
 }

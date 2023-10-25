@@ -10,7 +10,7 @@ export interface IIdentificator<I extends IdentifiersMap = {}> {
 
 export const identificator = <I extends IdentifiersMap>(
   secret: string,
-  exp: string | number
+  exp: string | number,
 ) => {
   const secretEncoder = new TextEncoder().encode(secret);
   const alg = "HS256";
