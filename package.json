@@ -1,6 +1,6 @@
 {
   "name": "@anycable/serverless-js",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "AnyCable channels for serverless JS apps",
   "engines": {
     "node": ">=18.0.0",
