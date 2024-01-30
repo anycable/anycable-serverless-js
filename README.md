@@ -28,8 +28,10 @@ import {
   Application,
   ConnectionHandle,
   broadcaster,
-  identificator,
 } from "@anycable/serverless-js";
+
+// Some custom authentication logic
+import { verifyToken } from "./auth";
 
 // The identifiers  type describe connection identifiers—e.g., user ID, username, etc.
 export type CableIdentifiers = {
@@ -158,6 +160,25 @@ export const broadcastTo = broadcaster(broadcastURL, broadcastToken);
 ```
 
 Currently, this package only supports broadcasting over HTTP. However, AnyCable provides different [broadcasting adapters](https://docs.anycable.io/ruby/broadcast_adapters) (e.g., Redis, NATS, etc.) that you can integrate yourself.
+
+### Using AnyCable JWT
+
+You can use [AnyCable JWT](https://docs.anycable.io/anycable-go/jwt_identification) and perform authentication and identification fully at the AnyCable side without calling the `connect` callback. For that, you can use the identificator object and generate auth tokens with it:
+
+```js
+import { identificator } from "@anycable/serverless-js";
+
+const jwtSecret = "very-secret";
+const jwtTTL = "1h";
+
+export const identifier = identificator(jwtSecret, jwtTTL);
+
+// Then, somewhere in your code, generate a token and provide it to the client
+const userId = authenticatedUser.id;
+const token = await identifier.generateToken({ userId });
+
+const cableURL = `${CABLE_URL}?jid=${token}`
+```
 
 ### HTTP handlers
 
