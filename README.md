@@ -147,6 +147,8 @@ export default class ChatChannel
 app.registerChannel("chat", new ChatChannel());
 ```
 
+### Broadcasting
+
 Finally, to **broadcast** messages to connected clients, you must use a broadcaster instance:
 
 ```js
