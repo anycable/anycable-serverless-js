@@ -2,13 +2,19 @@
 
 # AnyCable Serverless
 
-This package provides modules to implement [AnyCable](https://anycable.io) backend APIs to be executed in serverless Node.js environments.
+This package provides modules to implement [AnyCable](https://anycable.io) backend APIs to be executed in serverless Node.js environments. (Works with serverful apps, too, of course.)
 
 > See our [demo application](https://github.com/anycable/vercel-anycable-demo) for a working example.
 
 ## Architecture and components
 
-The package comes with HTTP handlers to handle [AnyCable RPC-over-HTTP](https://docs.anycable.io/architecture) requests and provides **channels** and **application** abstractions to describe real-time features of your application.
+This package provides functionality to work with AnyCable server from a JS/TS backend applications and includes support for the following features:
+
+- [JWT authentication](#using-anycable-jwt)
+- [Signed streams](#signed-streams)
+- [Broadcasting](#broadcasting)
+
+The package also comes with HTTP handlers to handle [AnyCable RPC-over-HTTP](https://docs.anycable.io/anycable-go/rpc) requests and provides **channels** and **application** abstractions to describe real-time features of your application.
 
 ## Usage
 
@@ -18,7 +24,74 @@ Install the `@anycable/serverless-js` package using your tool of choice, e.g.:
 npm install @anycable/serverless-js
 ```
 
-### Configuring the application and channels
+### Using AnyCable JWT
+
+[AnyCable JWT](https://docs.anycable.io/anycable-go/jwt_identification) is a recommended way to authenticate your clients. To get started, you can use the identificator object and generate auth tokens with it:
+
+```js
+import { identificator } from "@anycable/serverless-js";
+
+const jwtSecret = "very-secret";
+const jwtTTL = "1h";
+
+export const identifier = identificator(jwtSecret, jwtTTL);
+
+// Then, somewhere in your code, generate a token and provide it to the client
+const userId = authenticatedUser.id;
+const token = await identifier.generateToken({ userId });
+
+const cableURL = `${CABLE_URL}?jid=${token}`
+```
+
+You can pass any identification information to the token. It can be later used in _channels_ (see below).
+
+### Signed streams
+
+You can create a _signer_ instance to generate signed streams names and use them with [AnyCable pub/sub](https://docs.anycable.io/anycable-go/signed_streams):
+
+```js
+import { signer } from "@anycable/serverless-js";
+
+const streamsSecret = process.env.ANYCABLE_STREAMS_SECRET;
+
+const sign = signer(secret);
+
+const signedStreamName = sign("room/13");
+```
+
+Then, you can use the generated stream name with your client (using [AnyCable JS client SDK](https://github.com/anycable/anycable-client)):
+
+```js
+import { createCable } from "@anycable/web";
+
+const cable = createCable(WEBSOCKET_URL);
+const stream = await fetchStreamForRoom("13");
+
+const channel = cable.streamFromSigned(stream);
+channel.on("message", (msg) => {
+  // handle notification
+})
+```
+
+### Broadcasting
+
+To **broadcast** messages to connected clients, you must use a broadcaster instance:
+
+```js
+import { broadcaster } from "@anycable/serverless-js";
+
+// Broadcasting configuration
+const broadcastURL =
+  process.env.ANYCABLE_BROADCAST_URL || "http://127.0.0.1:8090/_broadcast";
+const broadcastToken = process.env.ANYCABLE_HTTP_BROADCAST_SECRET || "";
+
+// Create a broadcasting function to send broadcast messages via HTTP API
+export const broadcastTo = broadcaster(broadcastURL, broadcastToken);
+```
+
+Currently, this package only supports broadcasting over HTTP. However, AnyCable provides different [broadcasting adapters](https://docs.anycable.io/anycable-go/broadcasting) (e.g., Redis, NATS, etc.) that you can integrate yourself.
+
+### Using channels (AnyCable RPC)
 
 An **application** instance is responsible for handling the connection lifecycle and dispatching messages to the appropriate channels.
 
@@ -40,6 +113,8 @@ export type CableIdentifiers = {
 
 // Application instance handles connection lifecycle events
 class CableApplication extends Application<CableIdentifiers> {
+  // IMPORTANT: When using AnyCable JWT, you don't need to define
+  // the connect() callback, authentication doesn't hit your server
   async connect(handle: ConnectionHandle<CableIdentifiers>) {
     const url = handle.env.url;
     const params = new URL(url).searchParams;
@@ -145,41 +220,6 @@ export default class ChatChannel
 // You MUST register a channel instance within the application
 // The client MUST use the provided identifier to subscribe to the channel.
 app.registerChannel("chat", new ChatChannel());
-```
-
-### Broadcasting
-
-Finally, to **broadcast** messages to connected clients, you must use a broadcaster instance:
-
-```js
-// Broadcasting configuration
-const broadcastURL =
-  process.env.ANYCABLE_BROADCAST_URL || "http://127.0.0.1:8090/_broadcast";
-const broadcastToken = process.env.ANYCABLE_HTTP_BROADCAST_SECRET || "";
-
-// Create a broadcasting function to send broadcast messages via HTTP API
-export const broadcastTo = broadcaster(broadcastURL, broadcastToken);
-```
-
-Currently, this package only supports broadcasting over HTTP. However, AnyCable provides different [broadcasting adapters](https://docs.anycable.io/ruby/broadcast_adapters) (e.g., Redis, NATS, etc.) that you can integrate yourself.
-
-### Using AnyCable JWT
-
-You can use [AnyCable JWT](https://docs.anycable.io/anycable-go/jwt_identification) and perform authentication and identification fully at the AnyCable side without calling the `connect` callback. For that, you can use the identificator object and generate auth tokens with it:
-
-```js
-import { identificator } from "@anycable/serverless-js";
-
-const jwtSecret = "very-secret";
-const jwtTTL = "1h";
-
-export const identifier = identificator(jwtSecret, jwtTTL);
-
-// Then, somewhere in your code, generate a token and provide it to the client
-const userId = authenticatedUser.id;
-const token = await identifier.generateToken({ userId });
-
-const cableURL = `${CABLE_URL}?jid=${token}`
 ```
 
 ### HTTP handlers
