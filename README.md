@@ -151,7 +151,7 @@ export default app;
 **Channels** instances reflect particular features (e.g, chat room, notifications, etc.) and are responsible for handling incoming commands and subscription lifecycle events:
 
 ```js
-import { Channel, ChannelHandle } from "@/lib/anycable";
+import { Channel, ChannelHandle } from "@anycable/serverless-js";
 // We re-using the identifiers type from the cable application
 import type { CableIdentifiers } from "../cable";
 
@@ -233,7 +233,7 @@ Define [Vercel](https://vercel.com) serverless functions as follows:
 ```js
 // api/anycable/connect/route.ts
 import { NextResponse } from "next/server";
-import { connectHandler, Status } from "@/lib/anycable";
+import { connectHandler, Status } from "@anycable/serverless-js";
 import app from "../../cable";
 
 export async function POST(request: Request) {
@@ -253,7 +253,7 @@ export async function POST(request: Request) {
 
 // api/anycable/command/route.ts
 import { NextResponse } from "next/server";
-import { commandHandler, Status } from "@/lib/anycable";
+import { commandHandler, Status } from "@anycable/serverless-js";
 import app from "../../cable";
 
 export async function POST(request: Request) {
@@ -273,7 +273,7 @@ export async function POST(request: Request) {
 
 // api/anycable/disconnect/route.ts
 import { NextResponse } from "next/server";
-import { disconnectHandler, Status } from "@/lib/anycable";
+import { disconnectHandler, Status } from "@anycable/serverless-js";
 import app from "../../cable";
 
 export async function POST(request: Request) {
@@ -316,7 +316,7 @@ And then you can use the following handler:
 ```js
 // api/anycable/route.ts
 import { NextResponse } from "next/server";
-import { handler, Status } from "@/lib/anycable";
+import { handler, Status } from "@anycable/serverless-js";
 import app from "../../cable";
 
 export async function POST(request: Request) {
