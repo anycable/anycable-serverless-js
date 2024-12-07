@@ -2,6 +2,10 @@
 
 ## master
 
+## 0.2.1 (2024-12-06)
+
+- Fix merging channel state.
+
 ## 0.2.0 (2024-04-16)
 
 - Add stream signer.

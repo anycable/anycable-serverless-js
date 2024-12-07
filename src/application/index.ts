@@ -82,8 +82,12 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
     }
 
     if (handle.state) {
-      this.env.istate = this.env.istate || {}
-      this.env.istate[handle.identifier] = JSON.stringify(handle.state)
+      const serializedState = {} as any
+      for (const k in handle.state) {
+        const v = (handle.state as any)[k] as any
+        serializedState[k] = JSON.stringify(v)
+      }
+      this.env.istate = serializedState
     }
 
     this.streams = this.streams.concat(handle.streams)
