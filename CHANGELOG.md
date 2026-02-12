@@ -2,6 +2,10 @@
 
 ## master
 
+## 0.2.2 (2026-02-12)
+
+- Add missing `/index.js`.
+
 ## 0.2.1 (2024-12-06)
 
 - Fix merging channel state.

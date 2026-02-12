@@ -1,5 +1,5 @@
-import { Channel, ChannelHandle } from '../channel'
-import { Env, EnvResponse } from '../rpc'
+import { Channel, ChannelHandle } from '../channel/index.js'
+import { Env, EnvResponse } from '../rpc/index.js'
 
 export type IdentifiersMap = { [id: string]: unknown }
 

@@ -1,4 +1,4 @@
-import { Env } from '../rpc'
+import { Env } from '../rpc/index.js'
 
 interface ConnectionDelegate<I = {}> {
   get env(): Env

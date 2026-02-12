@@ -8,9 +8,9 @@ import {
   CommandMessage,
   DisconnectRequest,
   DisconnectResponse
-} from '../rpc'
+} from '../rpc/index.js'
 
-import { Application } from '../application'
+import { Application } from '../application/index.js'
 
 async function buffer(readable: Readable) {
   const chunks = []
