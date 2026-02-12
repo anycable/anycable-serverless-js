@@ -19,7 +19,11 @@ export {
 export { Application, ConnectionHandle } from './application/index.js'
 export type { IdentifiersMap } from './application/index.js'
 export { Channel, ChannelHandle } from './channel/index.js'
-export type { ChannelParamsMap, ChannelState, ServerAction } from './channel/index.js'
+export type {
+  ChannelParamsMap,
+  ChannelState,
+  ServerAction
+} from './channel/index.js'
 export type { IBroadcast, IPayload, IMetadata } from './broadcast/index.js'
 export { broadcaster } from './broadcast/index.js'
 export { identificator } from './jwt/index.js'
