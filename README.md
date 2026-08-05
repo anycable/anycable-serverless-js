@@ -89,6 +89,17 @@ const broadcastToken = process.env.ANYCABLE_HTTP_BROADCAST_SECRET || "";
 export const broadcastTo = broadcaster(broadcastURL, broadcastToken);
 ```
 
+When AnyCable runs with a single application secret (`ANYCABLE_SECRET`), the broadcast endpoint is protected by a key derived from that secret. Use the `broadcastKey` function to obtain it:
+
+```js
+import { broadcaster, broadcastKey } from "@anycable/serverless-js";
+
+export const broadcastTo = broadcaster(
+  broadcastURL,
+  broadcastKey(process.env.ANYCABLE_SECRET)
+);
+```
+
 Currently, this package only supports broadcasting over HTTP. However, AnyCable provides different [broadcasting adapters](https://docs.anycable.io/anycable-go/broadcasting) (e.g., Redis, NATS, etc.) that you can integrate yourself.
 
 ### Using channels (AnyCable RPC)

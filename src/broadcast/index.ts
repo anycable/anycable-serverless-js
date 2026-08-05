@@ -1,4 +1,15 @@
+import { createHmac } from 'crypto'
+
 export type IBroadcast = (stream: string, data: any) => Promise<void>
+
+// AnyCable secures the HTTP broadcast endpoint with a key derived from
+// the application secret (unless an explicit broadcast key is configured).
+// Use this function to obtain the broadcast key from the app secret:
+//
+//   const broadcastTo = broadcaster(url, broadcastKey(process.env.ANYCABLE_SECRET))
+export const broadcastKey = (secret: string): string => {
+  return createHmac('sha256', secret).update('broadcast-cable').digest('hex')
+}
 
 export type IMetadata = {
   transient?: boolean

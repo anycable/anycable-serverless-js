@@ -1,4 +1,4 @@
-import { broadcaster } from '../src/index'
+import { broadcaster, broadcastKey } from '../src/index'
 import { suite } from 'uvu'
 import * as assert from 'uvu/assert'
 import fetch from 'node-fetch'
@@ -77,6 +77,14 @@ BroadcastTest('handles non-OK response', async () => {
   } catch (error) {
     assert.is(error.message, `Error broadcasting to ${mockStream}: Not Found`)
   }
+})
+
+BroadcastTest('derives the broadcast key from the application secret', () => {
+  // echo -n 'broadcast-cable' | openssl dgst -sha256 -hmac 's3cret'
+  assert.is(
+    broadcastKey('s3cret'),
+    'b12500da392cd5dc51962f1b1c0ebf8919e34f0025bf418332ae1b9d13c5bcc7'
+  )
 })
 
 BroadcastTest.run()
