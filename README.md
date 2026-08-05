@@ -222,6 +222,46 @@ export default class ChatChannel
 app.registerChannel("chat", new ChatChannel());
 ```
 
+### Presence and whispering
+
+Channels can enable [presence tracking](https://docs.anycable.io/anycable-go/presence) and [whispering](https://docs.anycable.io/anycable-go/signed_streams?id=whispering) for their streams. The AnyCable server takes care of the actual presence bookkeeping and whisper delivery; the channel only declares them:
+
+```js
+export default class ChatChannel
+  extends Channel<CableIdentifiers, ChatChannelParams, ChatMessage>
+{
+  async subscribed(
+    handle: ChannelHandle<CableIdentifiers>,
+    params: ChatChannelParams | null,
+  ) {
+    if (!params?.roomId) {
+      handle.reject();
+      return;
+    }
+
+    // Enable client-to-client messages (whispers) on the stream
+    handle.streamFrom(`room:${params.roomId}`, { whisper: true });
+
+    // Join the presence set of the stream (the first started stream by default)
+    handle.joinPresence(handle.identifiers!.userId, {
+      username: handle.identifiers!.username,
+    });
+  }
+
+  // Presence may also be managed from actions
+  async goOffline(
+    handle: ChannelHandle<CableIdentifiers>,
+    params: ChatChannelParams,
+  ) {
+    handle.leavePresence(handle.identifiers!.userId);
+  }
+}
+```
+
+On the client side, use the corresponding [AnyCable JS client](https://github.com/anycable/anycable-client) APIs: `channel.whisper(payload)` and `channel.presence`.
+
+**NOTE:** Presence requires AnyCable server v1.6+, whispering requires v1.5+.
+
 ### HTTP handlers
 
 To glue our HTTP layer with the channels, we need to configure HTTP handlers. Below you can find an examples for popular serverless platforms.
