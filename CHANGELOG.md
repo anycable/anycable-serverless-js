@@ -2,6 +2,10 @@
 
 ## master
 
+- Add presence and whispering support.
+
+- Fix restoring channel state from RPC requests.
+
 ## 0.2.2 (2026-02-12)
 
 - Add missing `/index.js`.
