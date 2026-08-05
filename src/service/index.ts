@@ -98,6 +98,7 @@ export const commandHandler = async (
     transmissions: handle.transmissions,
     streams: handle.streams,
     stopped_streams: handle.stoppedStreams,
+    presence: handle.presence,
     env: handle.envChanges,
     error_msg: ''
   }

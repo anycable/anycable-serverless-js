@@ -38,6 +38,12 @@ export type CommandMessage = {
   env: Env
 }
 
+export type PresenceResponse = {
+  type: 'join' | 'leave'
+  id: string
+  info?: string
+}
+
 export type CommandResponse = {
   status: Status
   disconnect: boolean
@@ -47,6 +53,7 @@ export type CommandResponse = {
   error_msg: string | null
   env: EnvResponse
   stopped_streams: string[] | null
+  presence: PresenceResponse | null
 }
 
 export type DisconnectRequest = {

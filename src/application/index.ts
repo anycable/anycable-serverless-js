@@ -1,7 +1,17 @@
-import { Channel, ChannelHandle } from '../channel/index.js'
-import { Env, EnvResponse } from '../rpc/index.js'
+import { Channel, ChannelHandle, ChannelState } from '../channel/index.js'
+import { Env, EnvResponse, PresenceResponse } from '../rpc/index.js'
 
 export type IdentifiersMap = { [id: string]: unknown }
+
+// State values are JSON-encoded by this SDK; fall back to the raw string
+// for values written by other tools
+const parseStateValue = (value: string): unknown => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
 
 export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
   readonly id: string | null
@@ -14,6 +24,7 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
   stopStreams: boolean = false
   env: Env
   identifiers: IdentifiersType | null = null
+  presence: PresenceResponse | null = null
 
   constructor(id: string | null, env: Env) {
     this.id = id
@@ -60,16 +71,43 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
     return this
   }
 
-  buildChannelHandle(identifier: string): ChannelHandle<IdentifiersType> {
-    const rawState = this.env.istate ? this.env.istate[identifier] : null
+  // Channel state arrives in two shapes: for commands, `env.istate` is
+  // the current channel's state map; for disconnect, it's keyed by identifier
+  // with JSON-encoded state maps as values
+  buildChannelHandle(
+    identifier: string,
+    nested: boolean = false
+  ): ChannelHandle<IdentifiersType> {
+    let rawState: Record<string, string> | null = null
 
-    let istate = null
-
-    if (rawState) {
-      istate = JSON.parse(rawState)
+    if (this.env.istate) {
+      if (nested) {
+        const encoded = this.env.istate[identifier]
+        try {
+          rawState = encoded ? JSON.parse(encoded) : null
+        } catch {
+          rawState = null
+        }
+      } else {
+        rawState = this.env.istate
+      }
     }
 
-    return new ChannelHandle(this, identifier, istate)
+    const state = {} as ChannelState
+    const internalState = {} as Record<string, string>
+
+    if (rawState) {
+      for (const k in rawState) {
+        // Keys starting with `$` are reserved by the server and hold raw values
+        if (k.startsWith('$')) {
+          internalState[k] = rawState[k]
+        } else {
+          state[k] = parseStateValue(rawState[k])
+        }
+      }
+    }
+
+    return new ChannelHandle(this, identifier, state, internalState)
   }
 
   mergeChannelHandle(handle: ChannelHandle<IdentifiersType>) {
@@ -81,13 +119,35 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
       this.transmit({ identifier: handle.identifier, message: transmission })
     }
 
+    const serializedState = {} as any
     if (handle.state) {
-      const serializedState = {} as any
       for (const k in handle.state) {
         const v = (handle.state as any)[k] as any
         serializedState[k] = JSON.stringify(v)
       }
+    }
+    Object.assign(serializedState, handle.internalStateChanges)
+
+    // An empty istate would still mark the session state as dirty
+    // on the server; omit it instead
+    if (Object.keys(serializedState).length > 0) {
       this.env.istate = serializedState
+    } else {
+      delete this.env.istate
+    }
+
+    // The server processes presence replies even for rejected subscriptions;
+    // never report presence for them
+    if (handle.presence && !handle.rejected) {
+      const { type, id } = handle.presence
+      this.presence = { type, id }
+
+      if (
+        handle.presence.type === 'join' &&
+        handle.presence.info !== undefined
+      ) {
+        this.presence.info = JSON.stringify(handle.presence.info)
+      }
     }
 
     this.streams = this.streams.concat(handle.streams)
@@ -184,7 +244,7 @@ export class Application<IdentifiersType extends IdentifiersMap = {}> {
       for (const identifier of subscriptions) {
         const { channel, params } = this.findChannel(identifier)
 
-        const channelHandle = handle.buildChannelHandle(identifier)
+        const channelHandle = handle.buildChannelHandle(identifier, true)
 
         await channel.unsubscribed(channelHandle, params)
       }

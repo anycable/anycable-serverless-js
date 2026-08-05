@@ -7,7 +7,8 @@ export type {
   CommandMessage,
   CommandResponse,
   DisconnectRequest,
-  DisconnectResponse
+  DisconnectResponse,
+  PresenceResponse
 } from './rpc/index.js'
 
 export {
@@ -22,6 +23,7 @@ export { Channel, ChannelHandle } from './channel/index.js'
 export type {
   ChannelParamsMap,
   ChannelState,
+  PresenceEvent,
   ServerAction
 } from './channel/index.js'
 export type { IBroadcast, IPayload, IMetadata } from './broadcast/index.js'
