@@ -49,6 +49,27 @@ class RoomChannel extends Channel<
     handle.leavePresence(handle.identifiers!.userId)
   }
 
+  async rejoin(
+    handle: ChannelHandle<TestIdentifiers, RoomChannelState>,
+    _params: RoomChannelParams
+  ) {
+    handle.joinPresence(handle.identifiers!.userId, { away: true })
+  }
+
+  async typing(
+    handle: ChannelHandle<TestIdentifiers, RoomChannelState>,
+    params: RoomChannelParams
+  ) {
+    handle.whispersTo(`room:${params.roomId}:typing`)
+  }
+
+  async goPublic(
+    handle: ChannelHandle<TestIdentifiers, RoomChannelState>,
+    _params: RoomChannelParams
+  ) {
+    handle.joinPresence(handle.identifiers!.userId, undefined, 'lobby')
+  }
+
   async mute(
     handle: ChannelHandle<TestIdentifiers, RoomChannelState>,
     params: RoomChannelParams
@@ -132,7 +153,93 @@ PresenceTest('leavePresence', async () => {
 
   assert.equal(handle.presence, { type: 'leave', id: '42' })
   // Leaving must not touch the presence stream state
-  assert.equal(handle.envChanges.istate, {})
+  // (and no state changes means no istate in the response)
+  assert.is(handle.envChanges.istate, undefined)
+})
+
+PresenceTest('joinPresence falls back to the restored presence stream', async () => {
+  const app = buildApp()
+  const handle = new ConnectionHandle<TestIdentifiers>('123', {
+    url: 'http://localhost',
+    istate: { $p: 'room:13' }
+  })
+  handle.identifiedBy({ userId: '42' })
+
+  await app.handleCommand(
+    handle,
+    'message',
+    identifier,
+    JSON.stringify({ action: 'rejoin' })
+  )
+
+  assert.equal(handle.streams, ['room:13'])
+  assert.equal(handle.envChanges.istate, { $p: 'room:13' })
+  assert.equal(handle.presence, {
+    type: 'join',
+    id: '42',
+    info: JSON.stringify({ away: true })
+  })
+})
+
+PresenceTest('joinPresence with an explicit stream', async () => {
+  const app = buildApp()
+  const handle = new ConnectionHandle<TestIdentifiers>('123', {
+    url: 'http://localhost'
+  })
+  handle.identifiedBy({ userId: '42' })
+
+  await app.handleCommand(
+    handle,
+    'message',
+    identifier,
+    JSON.stringify({ action: 'goPublic' })
+  )
+
+  assert.equal(handle.streams, ['lobby'])
+  assert.equal(handle.envChanges.istate, { $p: 'lobby' })
+  assert.equal(handle.presence, { type: 'join', id: '42' })
+})
+
+PresenceTest('whispersTo', async () => {
+  const app = buildApp()
+  const handle = new ConnectionHandle<TestIdentifiers>('123', {
+    url: 'http://localhost'
+  })
+  handle.identifiedBy({ userId: '42' })
+
+  await app.handleCommand(
+    handle,
+    'message',
+    identifier,
+    JSON.stringify({ action: 'typing' })
+  )
+
+  assert.equal(handle.envChanges.istate, { $w: 'room:13:typing' })
+})
+
+PresenceTest('rejected subscription does not report presence', async () => {
+  const app = new Application<TestIdentifiers>()
+
+  const channel = new RoomChannel()
+  channel.subscribed = async (
+    handle: ChannelHandle<TestIdentifiers, RoomChannelState>,
+    params: RoomChannelParams | null
+  ) => {
+    handle.streamFrom(`room:${params!.roomId}`)
+    handle.joinPresence(handle.identifiers!.userId)
+    handle.reject()
+  }
+  app.registerChannel('room', channel)
+
+  const handle = new ConnectionHandle<TestIdentifiers>('123', {
+    url: 'http://localhost'
+  })
+  handle.identifiedBy({ userId: '42' })
+
+  await app.handleCommand(handle, 'subscribe', identifier, null)
+
+  assert.is(handle.rejected, true)
+  assert.is(handle.presence, null)
 })
 
 PresenceTest('stopStreamFrom disables whispering', async () => {

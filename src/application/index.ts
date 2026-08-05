@@ -3,6 +3,16 @@ import { Env, EnvResponse, PresenceResponse } from '../rpc/index.js'
 
 export type IdentifiersMap = { [id: string]: unknown }
 
+// State values are JSON-encoded by this SDK; fall back to the raw string
+// for values written by other tools
+const parseStateValue = (value: string): unknown => {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
+
 export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
   readonly id: string | null
 
@@ -73,7 +83,11 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
     if (this.env.istate) {
       if (nested) {
         const encoded = this.env.istate[identifier]
-        rawState = encoded ? JSON.parse(encoded) : null
+        try {
+          rawState = encoded ? JSON.parse(encoded) : null
+        } catch {
+          rawState = null
+        }
       } else {
         rawState = this.env.istate
       }
@@ -88,7 +102,7 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
         if (k.startsWith('$')) {
           internalState[k] = rawState[k]
         } else {
-          state[k] = JSON.parse(rawState[k])
+          state[k] = parseStateValue(rawState[k])
         }
       }
     }
@@ -113,9 +127,18 @@ export class ConnectionHandle<IdentifiersType extends IdentifiersMap = {}> {
       }
     }
     Object.assign(serializedState, handle.internalStateChanges)
-    this.env.istate = serializedState
 
-    if (handle.presence) {
+    // An empty istate would still mark the session state as dirty
+    // on the server; omit it instead
+    if (Object.keys(serializedState).length > 0) {
+      this.env.istate = serializedState
+    } else {
+      delete this.env.istate
+    }
+
+    // The server processes presence replies even for rejected subscriptions;
+    // never report presence for them
+    if (handle.presence && !handle.rejected) {
       const { type, id } = handle.presence
       this.presence = { type, id }
 

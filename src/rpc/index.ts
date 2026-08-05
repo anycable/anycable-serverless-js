@@ -39,7 +39,7 @@ export type CommandMessage = {
 }
 
 export type PresenceResponse = {
-  type: string
+  type: 'join' | 'leave'
   id: string
   info?: string
 }
