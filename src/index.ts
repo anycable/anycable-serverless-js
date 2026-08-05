@@ -25,7 +25,7 @@ export type {
   ServerAction
 } from './channel/index.js'
 export type { IBroadcast, IPayload, IMetadata } from './broadcast/index.js'
-export { broadcaster } from './broadcast/index.js'
+export { broadcaster, broadcastKey } from './broadcast/index.js'
 export { identificator } from './jwt/index.js'
 export type { IIdentificator } from './jwt/index.js'
 export type { IStreamSigner } from './streams/index.js'
