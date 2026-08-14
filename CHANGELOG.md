@@ -2,6 +2,8 @@
 
 ## master
 
+## 0.2.3 (2026-08-14)
+
 - Add `broadcastKey` to derive the broadcast endpoint authorization key from the application secret.
 
 ## 0.2.2 (2026-02-12)
